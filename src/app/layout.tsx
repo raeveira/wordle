@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Raeveira - Wordle",
+  title: "Wordle - Raeveira",
   description:
     "A simple wordle game made by raeveira that uses social issue words to educate / make people aware of social issues",
   keywords: [
@@ -39,11 +39,11 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://raeveira.nl",
+    url: "https://wordle.raeveira.nl",
     title: "Wordle - Raeveira",
     description:
       "A simple wordle game using social issue words to educate / make people aware of social issues.",
-    siteName: "raeveira.nl",
+    siteName: "wordle.raeveira.nl",
     images: [
       {
         url: "/images/og-image.png",
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "raeveira · creative developer",
+    title: "Wordle - Raeveira",
     description:
       "A simple wordle game using social issue words to educate / make people aware of social issues.",
     images: ["/images/og-image.png"],

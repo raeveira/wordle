@@ -31,7 +31,7 @@ export const useWordle = () => {
       return { success: isValid };
     }
 
-    toast.loading("Validating word");
+    toast.info("Validating word");
     const url = `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`;
 
     try {

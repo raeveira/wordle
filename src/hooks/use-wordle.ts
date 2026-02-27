@@ -31,7 +31,7 @@ export const useWordle = () => {
       return { success: isValid };
     }
 
-    toast.info("Validating word");
+    toast.loading("Validating word");
     const url = `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`;
 
     try {
@@ -48,6 +48,8 @@ export const useWordle = () => {
         checkedWordsCache.current.set(word, false);
         return { success: false };
       }
+
+      toast.success("Word Validated");
 
       checkedWordsCache.current.set(word, true);
       return { success: true };

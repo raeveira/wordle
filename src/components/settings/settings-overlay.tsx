@@ -33,7 +33,7 @@ export const SettingsOverlay = () => {
         <div className="grid flex-1 auto-rows-min gap-6 px-4">
           <h2 className="text-xl font-extrabold">Game Modes</h2>
           <Separator />
-          <Link href={"/hey"}>
+          <Link href={"/"}>
             <Button variant={"link"} size={"lg"}>
               Default Wordle
             </Button>

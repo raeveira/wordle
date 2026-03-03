@@ -21,44 +21,73 @@ export const useWordle = () => {
   const [gameOver, setGameOver] = useState(false);
   const checkedWordsCache = useRef<Map<string, boolean>>(new Map());
 
-  const checkWordExistence = useCallback(async (word: string) => {
-    if (!word) throw new Error("No word was given.");
+  const sleep = useCallback(
+    (ms: number) => new Promise((resolve) => setTimeout(resolve, ms)),
+    [],
+  );
 
-    // 1. Return early if the word is in the local cache
-    if (checkedWordsCache.current.has(word)) {
-      const isValid = checkedWordsCache.current.get(word);
-      if (!isValid) toast.error("Word does not exist");
-      return { success: isValid };
-    }
+  const validateWord = useCallback(
+    async (word: string): Promise<boolean> => {
+      if (!word) throw new Error("No word was given.");
 
-    toast.info("Validating word");
-    const url = `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`;
-
-    try {
-      const response = await fetch(url, { method: "GET" });
-
-      // 2. Explicitly handle the rate limit status code
-      if (response.status === 429) {
-        toast.error("Rate limit exceeded. Please wait a moment.");
-        return { success: false, rateLimited: true };
+      // 1. Return early if the word is in the local cache
+      if (checkedWordsCache.current.has(word)) {
+        const isValid = checkedWordsCache.current.get(word);
+        if (!isValid) toast.error("Word does not exist");
+        return isValid || true;
       }
 
-      if (response.status !== 200) {
-        toast.error("Word does not exist");
-        checkedWordsCache.current.set(word, false);
-        return { success: false };
+      toast.info("Validating word");
+      const url = `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`;
+
+      let retries = 3;
+
+      while (retries > 0) {
+        try {
+          const response = await fetch(url, { method: "HEAD" });
+
+          switch (response.status) {
+            case 200:
+            case 304:
+              toast.success(`"${word.toLowerCase()}" is a valid word.`);
+              return true;
+
+            // 404 Not Found: The word does not exist
+            case 404:
+              toast.error(`"${word.toLowerCase()}" is not a recognized word.`);
+              return false;
+
+            // 429 Too Many Requests: Rate limit exceeded (450 req / 5 min)
+            case 429:
+              retries -= 1;
+              if (retries === 0) {
+                toast.error("Rate limit exceeded. Please try again later.");
+                return false;
+              }
+
+              toast.warning(
+                `Rate limit hit. Waiting 5 seconds... (${retries} retries left)`,
+              );
+              // 3. Pause the actual execution block here, then let the while loop repeat
+              await sleep(5000);
+              continue;
+
+            // Handle any other unexpected status codes (e.g., 500 Server Error)
+            default:
+              console.error(`Unexpected API response: ${response.status}`);
+              toast.error("Unexpected Error, please try again later.");
+              return false;
+          }
+        } catch (err) {
+          toast.error("Network error occurred");
+          console.error("Network error during validation:", err);
+          return false;
+        }
       }
-
-      toast.success("Word Validated");
-
-      checkedWordsCache.current.set(word, true);
-      return { success: true };
-    } catch (err) {
-      toast.error("Network error occurred");
-      console.error(err);
-      return { success: false };
-    }
-  }, []);
+      return false;
+    },
+    [sleep],
+  );
 
   // Check the user guess
   const checkGuess = useCallback(
@@ -106,9 +135,9 @@ export const useWordle = () => {
     const currentGuessUpper = currentGuess.toUpperCase();
     const targetUpper = targetWord?.word.toUpperCase();
 
-    const wordExists = await checkWordExistence(currentGuessUpper);
+    const wordExists = await validateWord(currentGuessUpper);
 
-    if (!wordExists.success) return;
+    if (!wordExists) return;
 
     const result = checkGuess(currentGuessUpper, targetUpper || "");
 
@@ -129,14 +158,7 @@ export const useWordle = () => {
     if (currentGuessUpper === targetUpper || turn + 1 >= 6) {
       setGameOver(true);
     }
-  }, [
-    checkGuess,
-    currentGuess,
-    gameOver,
-    targetWord,
-    turn,
-    checkWordExistence,
-  ]);
+  }, [checkGuess, currentGuess, gameOver, targetWord, turn, validateWord]);
 
   const handleKey = useCallback(
     (key: string) => {

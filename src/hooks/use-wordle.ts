@@ -140,7 +140,10 @@ export const useWordle = (isInfoOpen: boolean) => {
 
     const wordExists = await validateWord(currentGuessUpper);
 
-    if (!wordExists) return;
+    if (!wordExists) {
+      setIsValidating(false);
+      return;
+    }
 
     const result = checkGuess(currentGuessUpper, targetUpper || "");
 
@@ -149,7 +152,17 @@ export const useWordle = (isInfoOpen: boolean) => {
     setLetterStatus((prev) => {
       const next = { ...prev };
       result.forEach(({ letter, status }) => {
-        next[letter] = status === "correct" ? "correct" : status;
+        const currentStatus = next[letter];
+        // If already green never downgrade
+        if (currentStatus === "correct") {
+          return;
+        }
+        // If it's already yellow only upgrade to green, never downgrade
+        if (currentStatus === "misplaced" && status === "incorrect") {
+          return;
+        }
+        // otherwise set the new status
+        next[letter] = status;
       });
       setIsValidating(false);
       return next;

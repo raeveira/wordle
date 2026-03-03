@@ -20,6 +20,7 @@ export const useWordle = (isInfoOpen: boolean) => {
   >({});
   const [gameOver, setGameOver] = useState(false);
   const checkedWordsCache = useRef<Map<string, boolean>>(new Map());
+  const [isValidating, setIsValidating] = useState<boolean>(false);
 
   const sleep = useCallback(
     (ms: number) => new Promise((resolve) => setTimeout(resolve, ms)),
@@ -132,6 +133,8 @@ export const useWordle = (isInfoOpen: boolean) => {
   const onSubmit = useCallback(async () => {
     if (currentGuess.length !== 5 || turn >= 6 || gameOver) return;
 
+    setIsValidating(true);
+
     const currentGuessUpper = currentGuess.toUpperCase();
     const targetUpper = targetWord?.word.toUpperCase();
 
@@ -142,13 +145,13 @@ export const useWordle = (isInfoOpen: boolean) => {
     const result = checkGuess(currentGuessUpper, targetUpper || "");
 
     setGuesses((prev) => prev.map((row, i) => (i === turn ? result : row)));
-
     // Update keyboard status
     setLetterStatus((prev) => {
       const next = { ...prev };
       result.forEach(({ letter, status }) => {
         next[letter] = status === "correct" ? "correct" : status;
       });
+      setIsValidating(false);
       return next;
     });
 
@@ -163,6 +166,7 @@ export const useWordle = (isInfoOpen: boolean) => {
   const handleKey = useCallback(
     (key: string) => {
       if (isInfoOpen) return;
+      if (isValidating) return;
       if (gameOver) return;
       if (key === "Enter") {
         if (currentGuess.length === 5) onSubmit();
@@ -170,7 +174,7 @@ export const useWordle = (isInfoOpen: boolean) => {
       else if (/^[A-Z]$/.test(key) && currentGuess.length < 5)
         setCurrentGuess((p) => p + key);
     },
-    [currentGuess.length, gameOver, isInfoOpen, onSubmit],
+    [currentGuess.length, gameOver, isInfoOpen, onSubmit, isValidating],
   );
 
   const resetGame = useCallback(() => {

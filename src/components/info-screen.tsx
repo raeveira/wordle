@@ -5,8 +5,13 @@ import { ColourDescription } from "@/components/colour-description";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 
-export const InfoScreen = () => {
-  const [isOpen, setIsOpen] = useState<boolean>(false);
+export const InfoScreen = ({
+  isOpen,
+  setIsOpen,
+}: {
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
+}) => {
   const [isMounted, setIsMounted] = useState<boolean>(false);
 
   useEffect(() => {
@@ -17,7 +22,7 @@ export const InfoScreen = () => {
     if (infoInitiallyClosed !== "true") {
       setIsOpen(true);
     }
-  }, []);
+  }, [setIsOpen]);
 
   const onClose = () => {
     localStorage.setItem("infoInitiallyClosed", "true");

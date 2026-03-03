@@ -1,5 +1,6 @@
 "use client";
-import { Settings } from "lucide-react";
+import { CircleQuestionMarkIcon, Settings } from "lucide-react";
+import { useState } from "react";
 import { InfoScreen } from "@/components/info-screen";
 import { Button } from "@/components/ui/button";
 import { GameOverScreen } from "@/components/wordle/game-over-screen";
@@ -8,6 +9,7 @@ import { WordleKeyboard } from "@/components/wordle/wordle-keyboard";
 import { useWordle } from "@/hooks/use-wordle";
 
 const Home = () => {
+  const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
   const {
     guesses,
     currentGuess,
@@ -17,13 +19,21 @@ const Home = () => {
     gameOver,
     targetWord,
     resetGame,
-  } = useWordle();
+  } = useWordle(isInfoOpen);
 
   return (
     <>
-      <InfoScreen />
+      <InfoScreen isOpen={isInfoOpen} setIsOpen={setIsInfoOpen} />
       <div className="flex flex-col items-center gap-4 p-4">
-        <div className="w-full max-w-lg flex justify-end">
+        <div className="w-full max-w-lg flex justify-between">
+          <Button
+            variant="outline"
+            size="icon"
+            className="rounded-xl"
+            onClick={() => setIsInfoOpen(!isInfoOpen)}
+          >
+            <CircleQuestionMarkIcon className="w-4 h-4" />
+          </Button>
           <Button variant="outline" size="icon" className="rounded-xl">
             <Settings className="w-4 h-4" />
           </Button>

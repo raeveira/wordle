@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { retrieveWords } from "@/lib/retrieve-words";
 import type { LetterStatus, Tile, Word } from "@/lib/wordle-types";
 
-export const useWordle = () => {
+export const useWordle = (isInfoOpen: boolean) => {
   const [targetWord, setTargetWord] = useState<Word | null>(null);
   const [guesses, setGuesses] = useState<Tile[][]>(
     Array.from({ length: 6 }, () =>
@@ -162,6 +162,7 @@ export const useWordle = () => {
 
   const handleKey = useCallback(
     (key: string) => {
+      if (isInfoOpen) return;
       if (gameOver) return;
       if (key === "Enter") {
         if (currentGuess.length === 5) onSubmit();
@@ -169,7 +170,7 @@ export const useWordle = () => {
       else if (/^[A-Z]$/.test(key) && currentGuess.length < 5)
         setCurrentGuess((p) => p + key);
     },
-    [currentGuess.length, gameOver, onSubmit],
+    [currentGuess.length, gameOver, isInfoOpen, onSubmit],
   );
 
   const resetGame = useCallback(() => {

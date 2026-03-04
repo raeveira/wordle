@@ -5,16 +5,11 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
-  type DialogContentProps,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/animate-ui/components/radix/dialog";
 import { ColourDescription } from "@/components/colour-description";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const InfoScreen = ({
   isOpen,

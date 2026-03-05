@@ -3,6 +3,23 @@ import { toast } from "sonner";
 import { retrieveWords } from "@/lib/retrieve-words";
 import type { LetterStatus, Tile, Word } from "@/lib/wordle-types";
 
+/**
+ * Custom React hook that manages all Wordle game logic and state
+ * Handles word validation, guess checking, game progression, and keyboard input
+ * @function useWordle
+ * @param {boolean} isInfoOpen - Whether the info modal/overlay is currently open (blocks game input)
+ * @returns {Object} Game state and control functions
+ * @returns {Tile[][]} return.guesses - 6x5 grid of all submitted guesses and their tile statuses
+ * @returns {string} return.currentGuess - The current word being typed (0-5 characters)
+ * @returns {number} return.turn - Current round number (0-5), increments after each valid submission
+ * @returns {Record<string, LetterStatus>} return.letterStatus - Keyboard state mapping each letter to its status
+ * @returns {boolean} return.gameOver - Whether the game has ended (win or lose)
+ * @returns {Function} return.handleKey - Processes keyboard input (letters, Enter, Backspace)
+ * @returns {Word|null} return.targetWord - The current target word object or null if loading
+ * @returns {Function} return.resetGame - Resets all game state to initial values
+ * @example
+ * const { guesses, currentGuess, handleKey, targetWord, gameOver } = useWordle(isInfoOpen);
+ */
 export const useWordle = (isInfoOpen: boolean) => {
   const [targetWord, setTargetWord] = useState<Word | null>(null);
   const [guesses, setGuesses] = useState<Tile[][]>(
@@ -22,11 +39,30 @@ export const useWordle = (isInfoOpen: boolean) => {
   const checkedWordsCache = useRef<Map<string, boolean>>(new Map());
   const [isValidating, setIsValidating] = useState<boolean>(false);
 
+  /**
+   * Utility function to create a promise-based delay
+   * @function sleep
+   * @param {number} ms - Milliseconds to delay
+   * @returns {Promise<void>} Resolves after the specified delay
+   * @example
+   * await sleep(1000); // Wait 1 second
+   */
   const sleep = useCallback(
     (ms: number) => new Promise((resolve) => setTimeout(resolve, ms)),
     [],
   );
 
+  /**
+   * Validates if a word exists using the Dictionary API
+   * Implements caching and retry logic with exponential backoff for rate limits
+   * Displays toast notifications for user feedback
+   * @async
+   * @function validateWord
+   * @param {string} word - The word to validate (uppercase or lowercase)
+   * @returns {Promise<boolean>} True if word is valid, false otherwise
+   * @throws {Error} If no word is provided
+   * @private
+   */
   const validateWord = useCallback(
     async (word: string): Promise<boolean> => {
       if (!word) throw new Error("No word was given.");
@@ -90,7 +126,20 @@ export const useWordle = (isInfoOpen: boolean) => {
     [sleep],
   );
 
-  // Check the user guess
+  /**
+   * Compares a guessed word against the target word and returns tile statuses
+   * Implements Wordle matching logic: correct letters get marked green, misplaced get yellow, etc.
+   * Handles duplicate letters correctly (doesn't over-mark duplicates)
+   * @function checkGuess
+   * @param {string} guess - The guessed word (5 letters, uppercase)
+   * @param {string} target - The target word to compare against (5 letters, uppercase)
+   * @returns {Tile[]} Array of 5 tiles with letters and their validation statuses
+   * @throws {Error} If targetWord is not initialized
+   * @private
+   * @example
+   * const result = checkGuess("STEAL", "LEAST");
+   * // Returns tiles showing S/E/A/L are misplaced, T is correct
+   */
   const checkGuess = useCallback(
     (guess: string, target: string): Tile[] => {
       if (!targetWord) {
@@ -129,7 +178,14 @@ export const useWordle = (isInfoOpen: boolean) => {
     [targetWord],
   );
 
-  // On user submit go through game logic
+  /**
+   * Handles guess submission: validates, checks against target, updates game state
+   * Validates word exists, updates tile/keyboard statuses, advances turn, checks win condition
+   * @async
+   * @function onSubmit
+   * @returns {Promise<void>}
+   * @private
+   */
   const onSubmit = useCallback(async () => {
     if (currentGuess.length !== 5 || turn >= 6 || gameOver) return;
 
@@ -176,6 +232,15 @@ export const useWordle = (isInfoOpen: boolean) => {
     }
   }, [checkGuess, currentGuess, gameOver, targetWord, turn, validateWord]);
 
+  /**
+   * Processes keyboard input (letters, Enter, Backspace)
+   * Respects game state (ignores input if game over, modal open, or validating)
+   * Handles Enter to submit, Backspace to delete, or letter keys to append
+   * @function handleKey
+   * @param {string} key - The keyboard key pressed (e.g., "A", "Enter", "Backspace")
+   * @returns {void}
+   * @private
+   */
   const handleKey = useCallback(
     (key: string) => {
       if (isInfoOpen) return;
@@ -190,8 +255,14 @@ export const useWordle = (isInfoOpen: boolean) => {
     [currentGuess.length, gameOver, isInfoOpen, onSubmit, isValidating],
   );
 
+  /**
+   * Completely resets the game to its initial state
+   * Clears target word, guesses, current input, turn counter, and letter statuses
+   * Used when starting a new game or resetting after game over
+   * @function resetGame
+   * @returns {void}
+   */
   const resetGame = useCallback(() => {
-    // Volledige reset van alle game state
     setTargetWord(null);
     setGameOver(false);
     setCurrentGuess("");

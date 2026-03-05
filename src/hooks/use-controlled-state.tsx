@@ -1,4 +1,4 @@
-import * as React from 'react';
+import * as React from "react";
 
 interface CommonControlledStateProps<T> {
   value?: T;
@@ -6,6 +6,7 @@ interface CommonControlledStateProps<T> {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// biome-ignore lint/suspicious/noExplicitAny: <@shadcn already disabled it themself now i did it for biome.>
 export function useControlledState<T, Rest extends any[] = []>(
   props: CommonControlledStateProps<T> & {
     onChange?: (value: T, ...args: Rest) => void;

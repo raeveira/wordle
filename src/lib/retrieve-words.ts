@@ -2,17 +2,41 @@
 import { prisma } from "@/lib/prisma";
 
 /**
- * Server action to fetch all available words from the database
- * This function runs on the server and retrieves the complete word list for the game
- * Use this in server components or in client actions that need the word database
+ * Server action that retrieves a single random word from the database.
+ *
+ * This function is intended for starting a new game, where only one target word
+ * is needed instead of loading the full word list. It first counts the available
+ * words, then selects one random row using a calculated offset.
+ *
  * @async
- * @function retrieveWords
- * @returns {Promise<Word[]>} Array of all Word objects with word and description properties
- * @throws {Error} If database connection fails or query encounters an error
+ * @function retrieveRandomWord
+ * @returns {Promise<{id: number, word: string, description: string} | null>}
+ * A promise that resolves to one random word object, or `null` when no words exist.
+ * @throws {Error} If the database query fails.
+ *
  * @example
- * const words = await retrieveWords();
- * const randomWord = words[Math.floor(Math.random() * words.length)];
+ * const word = await retrieveRandomWord();
+ *
+ * if (word) {
+ *   setTargetWord(word);
+ * }
  */
-export const retrieveWords = async () => {
-  return prisma.word.findMany();
+export const retrieveRandomWord = async () => {
+  const count = await prisma.word.count();
+
+  if (count === 0) return null;
+
+  const skip = Math.floor(Math.random() * count);
+
+  const [word] = await prisma.word.findMany({
+    select: {
+      id: true,
+      description: true,
+      word: true,
+    },
+    skip,
+    take: 1,
+  });
+
+  return word ?? null;
 };

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { retrieveWords } from "@/lib/retrieve-words";
+import { retrieveRandomWord } from "@/lib/retrieve-words";
 import type { LetterStatus, Tile, Word } from "@/lib/wordle-types";
 
 /**
@@ -285,10 +285,8 @@ export const useWordle = (isInfoOpen: boolean) => {
     if (targetWord) return;
 
     const setNewTargetWord = async () => {
-      const words = await retrieveWords();
-
-      const newWord = words[Math.floor(Math.random() * words.length)];
-      setTargetWord(newWord);
+      const newWord = await retrieveRandomWord();
+      if (newWord) setTargetWord(newWord);
     };
 
     void setNewTargetWord();
